@@ -62,12 +62,12 @@ of `[:src,:vattr]` as two independent columns does not even make sense, since
 they have different domains (belong to different tables).
 """
 function  subpart end
-@inline subpart(acs, part, name) = view_or_slice(subpart(acs, name), part)
+@inline Base.@propagate_inbounds subpart(acs, part, name) = view_or_slice(subpart(acs, name), part)
 
 function view_or_slice end
 @inline view_or_slice(x::AbstractVector, i::Union{Integer,StaticArray}) = x[i]
 @inline view_or_slice(x::AbstractVector, ::Colon) = x
-@inline view_or_slice(x::AbstractVector, i) = @view x[i]
+@inline Base.@propagate_inbounds view_or_slice(x::AbstractVector, i) = @view x[i]
 
 @inline subpart(acs, expr::GATExpr{:generator}) = subpart(acs, first(expr))
 @inline subpart(acs, expr::GATExpr{:id}) = parts(acs, first(dom(expr)))
@@ -126,10 +126,10 @@ Returns the ID of the added part.
 
 See also: [`add_parts!`](@ref).
 """
-@inline function add_part!(acs, type::Symbol, args...; kw...)
+@inline function add_part!(acs, type::Symbol, kw)
   part = only(add_parts!(acs,type,1))
   try
-    set_subparts!(acs, part, args...; kw...)
+    set_subparts!(acs, part, kw)
   catch e
     rem_part!(acs, type, part)
     rethrow(e)
@@ -145,10 +145,10 @@ See also: [`add_part!`](@ref).
 """
 function add_parts! end
 
-@inline function add_parts!(acs, type::Symbol, n::Int, args...; kw...)
+@inline function add_parts!(acs, type::Symbol, n::Int, kw)
   parts = add_parts!(acs, type, n)
   try
-    set_subparts!(acs, parts, args...; kw...)
+    set_subparts!(acs, parts, kw)
   catch e
     rem_parts!(acs, type, parts)
     rethrow(e)

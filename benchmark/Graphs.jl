@@ -49,7 +49,7 @@ end
 function bench_iter_neighbors(g)
   count = 0
   for v in vertices(g)
-    count += length(neighbors(g, v))
+    count += length(neighbors(g,v))
   end
   count
 end
@@ -138,7 +138,7 @@ g = wheel_graph(Graph, n)
 lg = LG.DiGraph(g)
 clbench["wheel-graph-triangles-hom"] =
   @benchmarkable ntriangles($g, TriangleBacktrackingSearch())
-clbench["wheel-graph-triangles-query"] =
+clbench["wheel-graph-triangles"] =
   @benchmarkable ntriangles($g, TriangleQuery())
 
 # Symmetric graphs
@@ -192,7 +192,8 @@ g = wheel_graph(SymmetricGraph, n)
 lg = LG.Graph(g)
 clbench["wheel-graph-triangles-hom"] =
   @benchmarkable ntriangles($g, TriangleBacktrackingSearch())
-clbench["wheel-graph-triangles-query"] =
+# clbench["wheel-graph-triangles-query"] =
+clbench["wheel-graph-triangles"] =
   @benchmarkable ntriangles($g, TriangleQuery())
 lgbench["wheel-graph-triangles"] = @benchmarkable sum(LG.triangles($lg))
 

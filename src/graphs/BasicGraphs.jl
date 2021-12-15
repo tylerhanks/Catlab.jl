@@ -8,7 +8,7 @@ departures due to differences between the data structures.
 """
 module BasicGraphs
 export HasVertices, HasGraph,
-  AbstractGraph, Graph, nv, ne, src, tgt, edges, vertices,
+  AbstractGraph, Graph, nv, ne, src, tgt, edges, inedges, outedges, vertices,
   has_edge, has_vertex, add_edge!, add_edges!, add_vertex!, add_vertices!,
   rem_edge!, rem_edges!, rem_vertex!, rem_vertices!,
   neighbors, inneighbors, outneighbors, all_neighbors, induced_subgraph,
@@ -101,6 +101,14 @@ edges(g::HasGraph) = parts(g, :E)
 edges(g::HasGraph, src::Int, tgt::Int) =
   (e for e in incident(g, src, :src) if subpart(g, e, :tgt) == tgt)
 
+""" Edges coming out of a vertex
+"""
+outedges(g::HasGraph, v) = incident(g, v, :src)
+
+""" Edges coming into a vertex
+"""
+inedges(g::HasGraph, v) = incident(g, v, :tgt)
+
 """ Whether the graph has the given vertex.
 """
 has_vertex(g::HasVertices, v) = has_part(g, :V, v)
@@ -121,15 +129,15 @@ add_vertices!(g::HasVertices, n::Int; kw...) = add_parts!(g, :V, n; kw...)
 
 """ Add an edge to a graph.
 """
-add_edge!(g::HasGraph, src::Int, tgt::Int; kw...) =
-  add_part!(g, :E; src=src, tgt=tgt, kw...)
+add_edge!(g::HasGraph, src::Int, tgt::Int) =
+  add_part!(g, :E, (src=src, tgt=tgt))
 
 """ Add multiple edges to a graph.
 """
 function add_edges!(g::HasGraph, srcs::AbstractVector{Int},
                     tgts::AbstractVector{Int}; kw...)
   @assert (n = length(srcs)) == length(tgts)
-  add_parts!(g, :E, n; src=srcs, tgt=tgts, kw...)
+  add_parts!(g, :E, n, (src=srcs, tgt=tgts, kw...))
 end
 
 """ Remove a vertex from a graph.
@@ -173,15 +181,15 @@ distinction is moot.
 In the presence of multiple edges, neighboring vertices are given *with
 multiplicity*. To get the unique neighbors, call `unique(neighbors(g))`.
 """
-neighbors(g::AbstractGraph, v::Int) = outneighbors(g, v)
+@inline neighbors(g::AbstractGraph, v::Int) = outneighbors(g, v)
 
 """ In-neighbors of vertex in a graph.
 """
-inneighbors(g::AbstractGraph, v::Int) = subpart(g, incident(g, v, :tgt), :src)
+@inline inneighbors(g::AbstractGraph, v::Int) = @inbounds subpart(g, incident(g, v, :tgt), :src)
 
 """ Out-neighbors of vertex in a graph.
 """
-outneighbors(g::AbstractGraph, v::Int) = subpart(g, incident(g, v, :src), :tgt)
+@inline outneighbors(g::AbstractGraph, v::Int) = @inbounds subpart(g, incident(g, v, :src), :tgt)
 
 """ Union of in-neighbors and out-neighbors in a graph.
 """

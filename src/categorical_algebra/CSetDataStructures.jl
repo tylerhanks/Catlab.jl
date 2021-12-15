@@ -248,7 +248,7 @@ end
 @inline Base.getindex(acs::StructACSet, args...) = ACSetInterface.subpart(acs, args...)
 
 @inline ACSetInterface.incident(acs::StructACSet, part, f::Symbol; copy::Bool=false) =
-  _incident(acs, part, Val{f}; copy=copy)
+  _incident(acs, part, Val{f}, Val{copy})
 
 broadcast_findall(xs, array::AbstractArray) =
   broadcast(x -> findall(y -> x == y, array), xs)
@@ -265,17 +265,18 @@ We keep the main body of the code generating out of the @generated function
 so that the code-generating function only needs to be compiled once.
 """
 function incident_body(s::SchemaDesc, idxed::AbstractDict{Symbol,Bool},
-                       unique_idxed::AbstractDict{Symbol,Bool}, f::Symbol)
+                       unique_idxed::AbstractDict{Symbol,Bool}, f::Symbol,
+                       copy::Bool)
   if f ∈ s.homs
     if idxed[f]
       quote
         indices = $(GlobalRef(ACSetInterface,:view_or_slice))(acs.hom_indices.$f, part)
-        copy ? Base.copy.(indices) : indices
+        $(copy ? :(Base.copy.(indices)) : :(indices))
       end
     elseif unique_idxed[f]
       quote
         indices = $(GlobalRef(ACSetInterface,:view_or_slice))(acs.hom_unique_indices.$f, part)
-        copy ? Base.copy.(indices) : indices
+        $(copy ? :(Base.copy.(indices)) : :(indices))
       end
     else
       :(broadcast_findall(part, acs.homs.$f))
@@ -284,7 +285,7 @@ function incident_body(s::SchemaDesc, idxed::AbstractDict{Symbol,Bool},
     if idxed[f]
       quote
         indices = get_attr_index(acs.attr_indices.$f, part)
-        copy ? Base.copy.(indices) : indices
+        $(copy ? :(Base.copy.(indices)) : :(indices))
       end
     elseif unique_idxed[f]
       quote
@@ -299,18 +300,20 @@ function incident_body(s::SchemaDesc, idxed::AbstractDict{Symbol,Bool},
 end
 
 @generated function _incident(acs::StructACSet{S,Ts,Idxed,UniqueIdxed},
-                              part, ::Type{Val{f}}; copy::Bool=false) where
-  {S,Ts,Idxed,UniqueIdxed,f}
-  incident_body(SchemaDesc(S),pairs(Idxed),pairs(UniqueIdxed),f)
+                              part, ::Type{Val{f}}, ::Type{Val{copy}}) where
+  {S,Ts,Idxed,UniqueIdxed,f,copy}
+  incident_body(SchemaDesc(S),pairs(Idxed),pairs(UniqueIdxed),f,copy)
 end
 
 # Mutators
 ##########
 
-@inline ACSetInterface.add_parts!(acs::StructACSet, ob::Symbol, n::Int) = _add_parts!(acs, Val{ob}, n)
+@inline ACSetInterface.add_parts!(acs::StructACSet, ob::Symbol, n::Int; index_sizes=(;)) =
+  _add_parts!(acs, Val{ob}, n, index_sizes)
 
 function add_parts_body(s::SchemaDesc, idxed::AbstractDict,
-                        unique_idxed::AbstractDict, ob::Symbol)
+                        unique_idxed::AbstractDict, ob::Symbol,
+                        index_sized_homs::Vector)
   code = quote
     m = acs.obs[$(ob_num(s, ob))]
     nparts = m + n
@@ -325,10 +328,16 @@ function add_parts_body(s::SchemaDesc, idxed::AbstractDict,
             end)
     end
     if s.codoms[f] == ob && idxed[f]
+      size = if f ∈ index_sized_homs
+        :(index_sizes[$(Expr(:quote, f))])
+      else
+        0
+      end
       push!(code.args, quote
             resize!(acs.hom_indices.$f, nparts)
             for i in newparts
-              acs.hom_indices.$f[i] = Int[]
+              acs.hom_indices.$f[i] = Array{Int}(undef, $size)
+              empty!(acs.hom_indices.$f[i])
             end
             end)
     elseif s.codoms[f] == ob && unique_idxed[f]
@@ -346,16 +355,17 @@ function add_parts_body(s::SchemaDesc, idxed::AbstractDict,
       push!(code.args,:(resize!(acs.attrs.$a, nparts)))
     end
   end
-  push!(code.args, :(newparts))
+  push!(code.args, :(return newparts))
   code
 end
 
 """ This generates the _add_parts! methods for a specific object of a `StructACSet`.
 """
 @generated function _add_parts!(acs::StructACSet{S,Ts,Idxed,UniqueIdxed},
-                                ::Type{Val{ob}}, n::Int) where
-  {S, Ts, Idxed, UniqueIdxed, ob}
-  add_parts_body(SchemaDesc(S),pairs(Idxed),pairs(UniqueIdxed),ob)
+                                ::Type{Val{ob}}, n::Int,
+                                index_sizes::NamedTuple{index_sized_homs}) where
+  {S, Ts, Idxed, UniqueIdxed, ob, index_sized_homs}
+  add_parts_body(SchemaDesc(S),pairs(Idxed),pairs(UniqueIdxed),ob,[index_sized_homs...])
 end
 
 @inline ACSetInterface.set_subpart!(acs::StructACSet, part::Int, f::Symbol, subpart) =
@@ -368,14 +378,15 @@ function set_subpart_body(s::SchemaDesc, idxed::AbstractDict{Symbol,Bool},
     if idxed[f]
       quote
         @assert 0 <= subpart <= acs.obs[$(ob_num(s, s.codoms[f]))]
-        old = acs.homs.$f[part]
-        acs.homs.$f[part] = subpart
+        @inbounds old = acs.homs.$f[part]
+        @inbounds acs.homs.$f[part] = subpart
         if old > 0
           @assert deletesorted!(acs.hom_indices.$f[old], part)
         end
         if subpart > 0
           insertsorted!(acs.hom_indices.$f[subpart], part)
         end
+        subpart
       end
     elseif unique_idxed[f]
       quote
@@ -387,11 +398,13 @@ function set_subpart_body(s::SchemaDesc, idxed::AbstractDict{Symbol,Bool},
         end
         acs.homs.$f[part] = subpart
         acs.hom_unique_indices.$f[subpart] = part
+        subpart
       end
     else
       quote
         @assert 0 <= subpart <= acs.obs[$(ob_num(s, s.codoms[f]))]
         acs.homs.$f[part] = subpart
+        subpart
       end
     end
   elseif f ∈ s.attrs
@@ -403,16 +416,18 @@ function set_subpart_body(s::SchemaDesc, idxed::AbstractDict{Symbol,Bool},
         end
         acs.attrs.$f[part] = subpart
         set_attr_index!(acs.attr_indices.$f, subpart, part)
+        subpart
       end
     elseif unique_idxed[f]
       quote
-        @assert subpart ∉ keys(acs.attr_unique_indices.$f) "subpart not unique"
+        @boundscheck @assert subpart ∉ keys(acs.attr_unique_indices.$f) "subpart not unique"
         if isassigned(acs.attrs.$f, part)
           old = acs.attrs.$f[part]
           delete!(acs.attr_unique_indices.$f, old)
         end
         acs.attrs.$f[part] = subpart
         acs.attr_unique_indices.$f[subpart] = part
+        subpart
       end
     else
       :(acs.attrs.$f[part] = subpart)
