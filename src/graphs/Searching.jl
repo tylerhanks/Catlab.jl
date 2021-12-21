@@ -33,10 +33,10 @@ implementations which are marginally faster in practice for smaller graphs,
 but the performance improvements using this implementation on large graphs
 can be significant.
 """
-bfs_parents(g::AbstractACSet, s::Int; dir = :out) = 
+bfs_parents(g::ACSet, s::Int; dir = :out) =
     (dir == :out) ? _bfs_parents(g, s, outneighbors) : _bfs_parents(g, s, inneighbors)
 
-function _bfs_parents(g::AbstractACSet, source, neighborfn::Function)
+function _bfs_parents(g::ACSet, source, neighborfn::Function)
     n = nv(g)
     visited = falses(n)
     parents = zeros(Int, nv(g))
@@ -73,7 +73,7 @@ and return a directed acyclic graph of vertices in the order they were discovere
 If `dir` is specified, use the corresponding edge direction (`:in` and `:out` are
 acceptable values).
 """
-bfs_tree(g::AbstractACSet, s::Integer; dir = :out) = tree(bfs_parents(g, s; dir = dir))
+bfs_tree(g::ACSet, s::Integer; dir = :out) = tree(bfs_parents(g, s; dir = dir))
 
 """
     dfs_parents(g, s[; dir=:out])
@@ -85,10 +85,10 @@ use the corresponding edge direction (`:in` and `:out` are acceptable values).
 ### Implementation Notes
 This version of DFS is iterative.
 """
-dfs_parents(g::AbstractACSet, s::Integer; dir=:out) =
+dfs_parents(g::ACSet, s::Integer; dir=:out) =
     (dir == :out) ? _dfs_parents(g, s, outneighbors) : _dfs_parents(g, s, inneighbors)
 
-function _dfs_parents(g::AbstractACSet, s::Int, neighborfn::Function)
+function _dfs_parents(g::ACSet, s::Int, neighborfn::Function)
     parents = zeros(Int, nv(g))
     seen = zeros(Bool, nv(g))
     S = [s]

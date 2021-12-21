@@ -1,9 +1,10 @@
 module GraphGenerators
 export path_graph, cycle_graph, complete_graph, star_graph, wheel_graph,
-  parallel_arrows
+  parallel_arrows, erdos_renyi, expected_degree_graph, watts_strogatz
 
 using ...CSetDataStructures, ..BasicGraphs
 using ...CSetDataStructures: hom
+using Random
 
 """ Path graph on ``n`` vertices.
 """
@@ -115,7 +116,7 @@ probability `p`.
 - https://github.com/JuliaGraphs/LightGraphs.jl/blob/2a644c2b15b444e7f32f73021ec276aa9fc8ba30/src/SimpleGraphs/generators/randgraphs.jl
 """
 function erdos_renyi(::Type{T}, n::Int, p::Real; V=(;),
-                     seed::Int=-1, rng::AbstractRNG=GLOBAL_RNG) where T <: AbstractACSet
+                     seed::Int=-1, rng::AbstractRNG=GLOBAL_RNG) where T <: ACSet
   rng = getRNG(seed,rng)
   p >= 1 && return complete_graph(T, n)
   maxe = n * (n-1)
@@ -134,7 +135,7 @@ graph with `n` vertices and `ne` edges.
 - https://github.com/JuliaGraphs/LightGraphs.jl/blob/2a644c2b15b444e7f32f73021ec276aa9fc8ba30/src/SimpleGraphs/generators/randgraphs.jl
 """
 function erdos_renyi(::Type{T}, n::Int, m::Int; V=(;),
-                     seed::Int=-1, rng::AbstractRNG=GLOBAL_RNG) where T <: AbstractACSet
+                     seed::Int=-1, rng::AbstractRNG=GLOBAL_RNG) where T <: ACSet
   rng = getRNG(seed, rng)
   maxe = n * (n-1)
   @assert(m <= maxe, "Maximum number of edges for this graph is $maxe")
@@ -173,7 +174,7 @@ from the expected values are likely.
 - https://github.com/JuliaGraphs/LightGraphs.jl/blob/2a644c2b15b444e7f32f73021ec276aa9fc8ba30/src/SimpleGraphs/generators/randgraphs.jl#L187
 """
 function expected_degree_graph(::Type{T},ω::Vector{<:Real}; V=(;),
-                               seed::Int=-1, rng::AbstractRNG=GLOBAL_RNG) where T <: AbstractACSet
+                               seed::Int=-1, rng::AbstractRNG=GLOBAL_RNG) where T <: ACSet
   rng = getRNG(seed, rng)
   g = T()
   add_vertices!(g,length(ω);V...)
@@ -181,7 +182,7 @@ function expected_degree_graph(::Type{T},ω::Vector{<:Real}; V=(;),
 end
 
 function expected_degree_graph!(g::T, ω::Vector{U};
-                                seed::Int=-1, rng::AbstractRNG=GLOBAL_RNG) where {T <: AbstractACSet, U <: Real}
+                                seed::Int=-1, rng::AbstractRNG=GLOBAL_RNG) where {T <: ACSet, U <: Real}
   rng = getRNG(seed, rng)
   n = length(ω)
   @assert all(zero(U) .<= ω .<= n - one(U)) "Elements of ω need to be at least 0 and at most n-1"
@@ -243,7 +244,7 @@ be rewired randomly.
 - https://github.com/JuliaGraphs/LightGraphs.jl/blob/2a644c2b15b444e7f32f73021ec276aa9fc8ba30/src/SimpleGraphs/generators/randgraphs.jl#L187
 """
 function watts_strogatz(::Type{T}, n::Integer, k::Integer, β::Real;
-                        seed::Int=-1, rng::AbstractRNG=GLOBAL_RNG) where T <: AbstractACSet
+                        seed::Int=-1, rng::AbstractRNG=GLOBAL_RNG) where T <: ACSet
   rng = getRNG(seed, rng)
   @assert k < n
 
