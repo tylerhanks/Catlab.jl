@@ -167,10 +167,10 @@ lgbench["star-graph"] =
 
 for gn in keys(GRAPHS)
   clbench[gn] = @benchmarkable connected_component_projection_bfs($(GRAPHS[gn]))
-  lgbench[gn] = @benchmarkable lg_connected_components_projection($(LG_GRAPHS[gn]))
+  lgbench[gn] = @benchmarkable connected_component_projection($(LG_GRAPHS[gn]))
 end
 
-bench = SUITE["GraphTriangles"]
+bench = SUITE["GraphTriangles"] = BenchmarkGroup()
 clbench = bench["Catlab"] = BenchmarkGroup()
 lgbench = bench["LightGraphs"] = BenchmarkGroup()
 
@@ -234,10 +234,10 @@ lgbench["star-graph-components"] =
 
 for gn in keys(SYMGRAPHS)
   clbench[gn] = @benchmarkable connected_component_projection_bfs($(SYMGRAPHS[gn]))
-  lgbench[gn] = @benchmarkable lg_connected_components_projection($(LG_SYMGRAPHS[gn]))
+  lgbench[gn] = @benchmarkable connected_component_projection($(LG_SYMGRAPHS[gn]))
 end
 
-bench = SUITE["SymmetricGraphTriangles"]
+bench = SUITE["SymmetricGraphTriangles"] = BenchmarkGroup()
 clbench = bench["Catlab"] = BenchmarkGroup()
 lgbench = bench["LightGraphs"] = BenchmarkGroup()
 

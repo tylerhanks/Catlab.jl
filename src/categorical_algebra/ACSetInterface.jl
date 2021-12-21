@@ -120,6 +120,8 @@ end
 incident(acs, part, expr::GATExpr; kw...) =
   incident(acs, part, subpart_names(expr); kw...)
 
+@inline add_part!(acs, type; kw...) = add_part!(acs, type, (;kw...))
+
 """ Add part of given type to acset, optionally setting its subparts.
 
 Returns the ID of the added part.
@@ -144,6 +146,8 @@ Returns the range of IDs for the added parts.
 See also: [`add_part!`](@ref).
 """
 function add_parts! end
+
+@inline add_parts!(acs, type::Symbol, n::Int; kw...) = add_parts!(acs, type, n, (;kw...))
 
 @inline function add_parts!(acs, type::Symbol, n::Int, kw)
   parts = add_parts!(acs, type, n)

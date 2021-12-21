@@ -308,8 +308,11 @@ end
 # Mutators
 ##########
 
-@inline ACSetInterface.add_parts!(acs::StructACSet, ob::Symbol, n::Int; index_sizes=(;)) =
+@inline add_parts_with_indices!(acs::StructACSet, ob::Symbol, n::Int, index_sizes::NamedTuple) =
   _add_parts!(acs, Val{ob}, n, index_sizes)
+
+@inline ACSetInterface.add_parts!(acs::StructACSet, ob::Symbol, n::Int) =
+  _add_parts!(acs, Val{ob}, n, (;))
 
 function add_parts_body(s::SchemaDesc, idxed::AbstractDict,
                         unique_idxed::AbstractDict, ob::Symbol,

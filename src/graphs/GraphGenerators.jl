@@ -5,6 +5,7 @@ export path_graph, cycle_graph, complete_graph, star_graph, wheel_graph,
 using ...CSetDataStructures, ..BasicGraphs
 using ...CSetDataStructures: hom
 using Random
+using Random: GLOBAL_RNG
 
 """ Path graph on ``n`` vertices.
 """
