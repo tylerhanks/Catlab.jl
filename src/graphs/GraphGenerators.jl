@@ -119,10 +119,14 @@ probability `p`.
 function erdos_renyi(::Type{T}, n::Int, p::Real; V=(;),
                      seed::Int=-1, rng::AbstractRNG=GLOBAL_RNG) where T <: ACSet
   rng = getRNG(seed,rng)
+  _erdos_renyi(T,n,p,V,rng)
+end
+
+function _erdos_renyi(::Type{T}, n::Int, p::Real, V, rng::AbstractRNG) where T <: ACSet
   p >= 1 && return complete_graph(T, n)
   maxe = n * (n-1)
   m = randbn(maxe,p;rng=rng)
-  return erdos_renyi(T,n,m;V=V,rng=rng)
+  return _erdos_renyi(T,n,m,V,rng)
 end
 
 
@@ -138,22 +142,30 @@ graph with `n` vertices and `ne` edges.
 function erdos_renyi(::Type{T}, n::Int, m::Int; V=(;),
                      seed::Int=-1, rng::AbstractRNG=GLOBAL_RNG) where T <: ACSet
   rng = getRNG(seed, rng)
+  _erdos_renyi(T,n,m,V,rng)
+end
+
+function _erdos_renyi(::Type{T}, n::Int, m::Int, V, rng::AbstractRNG) where T <: ACSet
   maxe = n * (n-1)
+  maxe == m && return complete_graph(T, n)
   @assert(m <= maxe, "Maximum number of edges for this graph is $maxe")
   # In the case of a symmetric graph, the edges are double-counted
   totale = is_directed(T) ? m : 2*m
+  k = Int(ceil(m/n))
 
   g = T()
-  add_vertices!(g, n; V...)
+  add_vertices_with_indices!(g, n, k)
+  set_subparts!(g,:V,V)
 
   while ne(g) < totale
     src = rand(rng, 1:n)
     tgt = rand(rng, 1:n)
-    src != tgt && isempty(edges(g, src, tgt)) && add_edge!(g,src,tgt)
+    src != tgt && !has_edge(g,src,tgt) && add_edge!(g,src,tgt)
   end
 
   return g
 end
+
 
 """
     expected_degree_graph(GraphType, ω)
@@ -247,6 +259,11 @@ be rewired randomly.
 function watts_strogatz(::Type{T}, n::Integer, k::Integer, β::Real;
                         seed::Int=-1, rng::AbstractRNG=GLOBAL_RNG) where T <: ACSet
   rng = getRNG(seed, rng)
+  _watts_strogatz(T,n,k,β,rng)
+end
+
+function _watts_strogatz(::Type{T}, n::Integer, k::Integer, β::Real,
+                         rng::AbstractRNG) where T <: ACSet
   @assert k < n
 
   # If we have n - 1 neighbors (exactly k/2 on each side), then the graph is
@@ -256,7 +273,7 @@ function watts_strogatz(::Type{T}, n::Integer, k::Integer, β::Real;
   end
 
   g = T()
-  add_vertices!(g,n)
+  add_vertices_with_indices!(g, n, k)
 
   # The ith next vertex, in clockwise order.
   # (Reduce to zero-based indexing, so the modulo works, by subtracting 1
@@ -288,7 +305,7 @@ function watts_strogatz(::Type{T}, n::Integer, k::Integer, β::Real;
       d = rand(1:n)               # Tentative new target
       d == s && continue          # Self-loops prohibited
       d == t && break             # Rewired to original target
-      if isempty(edges(g, s, d))  # Was this valid (i.e., unconnected)?
+      if !(has_edge(g,s,d))       # Was this valid (i.e., unconnected)?
         add_edge!(g, s, d)        # True rewiring: Add new edge
         rem_edge!(g, s, t)        # True rewiring: Delete original edge
         break                     # We found a valid target

@@ -153,7 +153,7 @@ g₀ = path_graph(Graph, n₀)
 g = ob(coproduct(fill(g₀, 5)))
 lg = LG.DiGraph(g)
 clbench["path-graph"] =
-  @benchmarkable connected_component_projection($g)
+  @benchmarkable connected_component_projection_bfs($g)
 lgbench["path-graph"] =
   @benchmarkable connected_component_projection($lg)
 
@@ -161,7 +161,7 @@ g₀ = star_graph(Graph, n₀)
 g = ob(coproduct(fill(g₀, 5)))
 lg = LG.DiGraph(g)
 clbench["star-graph"] =
-  @benchmarkable connected_component_projection($g)
+  @benchmarkable connected_component_projection_bfs($g)
 lgbench["star-graph"] =
   @benchmarkable connected_component_projection($lg)
 
@@ -372,7 +372,7 @@ sizes = [10000]
 ps = [0.001]
 for size in sizes, p in ps
   clbench["erdos_renyi-$size-$p"] =
-    @benchmarkable erdos_renyi($Graph, $size, $p)
+    @benchmarkable erdos_renyi($Graph, $size, $(p/2))
   lgbench["erdos_renyi-$size-$p"] =
     @benchmarkable LightGraphs.erdos_renyi($size, $p)
 end

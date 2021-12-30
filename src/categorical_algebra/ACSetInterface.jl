@@ -187,10 +187,8 @@ Both single and vectorized assignment are supported.
 
 See also: [`set_subpart!`](@ref).
 """
-@inline function set_subparts!(acs, part, kw::NamedTuple)
-  for name in keys(kw)
-    set_subpart!(acs, part, name, kw[name])
-  end
+@inline @generated function set_subparts!(acs, part, kw::NamedTuple{keys}) where {keys}
+  Expr(:block,[:(set_subpart!(acs, part, $(Expr(:quote, name)), kw.$name)) for name in keys]...)
 end
 
 @inline set_subparts!(acs, part; kw...) = set_subparts!(acs, part, (;kw...))
