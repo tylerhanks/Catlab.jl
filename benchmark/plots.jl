@@ -1,4 +1,5 @@
 using Plots, StatsPlots
+using Plots.PlotMeasures
 using DataFrames, Query
 using BenchmarkTools
 
@@ -32,6 +33,7 @@ end
 function subcat_data(dat,subcat)
   dat |>
     @filter(_.subcat==subcat) |>
+    @filter(_.platform ∉ ["Catlab-vectorized"]) |>
     @orderby((_.bench,_.platform)) |>
     @select(-:subcat) |>
     DataFrame
@@ -40,7 +42,8 @@ end
 function plot_subcat(dat,subcat,yscale=:linear)
   subcat_data(dat,subcat) |>
     @df groupedbar(:bench,:mt_normalized,group=:platform,
-                   xrotation=45,legend=:outerright,bar_width=0.5,yscale=yscale)
+                   xrotation=45,legend=:outerright,bar_width=0.5,
+                   yscale=yscale, bottom_margin=50px)
 end
 
 function plot_all_subcats(dat)
