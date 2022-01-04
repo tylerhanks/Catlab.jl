@@ -1,0 +1,29 @@
+subcat,bench,time,normalized_time
+Graph,iter-neighbors,0.0020 \mathrm{ms},1.358
+Graph,iter-edges,0.0006 \mathrm{ms},{\color{green} 0.319}
+Graph,make-path,0.6819 \mathrm{ms},{\color{red} 2.719}
+Graph,has-edge,0.0049 \mathrm{ms},{\color{green} 0.556}
+SymmetricGraph,iter-neighbors,0.0086 \mathrm{ms},{\color{red} 5.994}
+SymmetricGraph,iter-edges,0.0018 \mathrm{ms},{\color{green} 0.370}
+SymmetricGraph,make-path,1.8372 \mathrm{ms},{\color{red} 9.912}
+SymmetricGraph,has-edge,0.0057 \mathrm{ms},{\color{green} 0.787}
+LabeledGraph,indexed-lookup,0.4935 \mathrm{ms},{\color{green} 0.863}
+LabeledGraph,make-discrete,0.4867 \mathrm{ms},{\color{green} 0.534}
+LabeledGraph,iter-labels,0.0008 \mathrm{ms},{\color{green} 0.011}
+LabeledGraph,make-discrete-indexed,0.5896 \mathrm{ms},{\color{green} 0.788}
+GraphConnComponents,path-graph,0.0368 \mathrm{ms},{\color{green} 0.458}
+GraphConnComponents,complete100,0.0023 \mathrm{ms},{\color{red} 11.160}
+GraphConnComponents,path500,0.0014 \mathrm{ms},{\color{green} 0.368}
+GraphConnComponents,star-graph,0.0641 \mathrm{ms},{\color{green} 0.911}
+SymmetricGraphConnComponent,path-graph-components,0.0368 \mathrm{ms},{\color{green} 0.454}
+SymmetricGraphConnComponent,star-graph-components,0.0348 \mathrm{ms},{\color{green} 0.413}
+SymmetricGraphConnComponent,complete100,0.0031 \mathrm{ms},1.626
+SymmetricGraphConnComponent,path500,0.0019 \mathrm{ms},{\color{green} 0.495}
+SymmetricGraphConnComponent,tutte,0.0003 \mathrm{ms},1.037
+RandomGraph,expected_degree_graph-10000-10,1.4603 \mathrm{ms},1.719
+RandomGraph,watts_strogatz-10000-10,1.7695 \mathrm{ms},{\color{red} 2.730}
+RandomGraph,erdos_renyi-10000-0.001,1.3926 \mathrm{ms},1.032
+WeightedGraph,sum-weights,0.0012 \mathrm{ms},{\color{green} 0.009}
+WeightedGraph,increment-weights,0.0005 \mathrm{ms},{\color{green} 0.001}
+Searching,dfs_erdos_renyi-10000-0.001,0.1484 \mathrm{ms},1.203
+Searching,bfs_erdos_renyi-10000-0.001,0.1302 \mathrm{ms},1.110

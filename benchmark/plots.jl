@@ -7,12 +7,12 @@ function graphbench_data(suite)
   data = DataFrame(subcat=String[],bench=String[],platform=String[],
                    mt_normalized=Float64[],mediantime=Float64[])
   graphbenches = suite["Graphs"]
-  catlab_times = Dict{Tuple{String,String},Float64}()
+  noncatlab_times = Dict{Tuple{String,String},Float64}()
   for (subcat,subsuite) in graphbenches
     for (platform,results) in subsuite
       for (bench,result) in results
-        if platform == "Catlab"
-            catlab_times[(subcat,bench)] = median(result).time
+        if platform ∈ ["LightGraphs", "MetaGraphs"]
+            noncatlab_times[(subcat,bench)] = median(result).time
         end
         new_row = (subcat=subcat,
                     bench=bench,
@@ -24,8 +24,10 @@ function graphbench_data(suite)
     end
   end
   for i in 1:length(data.subcat)
-    data[i,:mt_normalized] = data[i,:mediantime] /
-      catlab_times[(data[i,:subcat],data[i,:bench])]
+    key = (data[i,:subcat], data[i,:bench])
+    if key ∈ keys(noncatlab_times)
+      data[i,:mt_normalized] = data[i,:mediantime] / noncatlab_times[key]
+    end
   end
   data
 end
@@ -33,7 +35,7 @@ end
 function subcat_data(dat,subcat)
   dat |>
     @filter(_.subcat==subcat) |>
-    @filter(_.platform ∉ ["Catlab-vectorized"]) |>
+    @filter(_.platform == ["Catlab"]) |>
     @orderby((_.bench,_.platform)) |>
     @select(-:subcat) |>
     DataFrame
@@ -43,7 +45,7 @@ function plot_subcat(dat,subcat,yscale=:linear)
   subcat_data(dat,subcat) |>
     @df groupedbar(:bench,:mt_normalized,group=:platform,
                    xrotation=45,legend=:outerright,bar_width=0.5,
-                   yscale=yscale, bottom_margin=50px)
+                   yscale=yscale, yguide="Rel. time", bottom_margin=50px)
 end
 
 function plot_all_subcats(dat)
