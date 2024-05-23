@@ -22,6 +22,7 @@ include("Chase.jl")
 include("FunctorialDataMigrations.jl")
 include("StructuredCospans.jl")
 include("SliceCategories.jl")
+include("CospanAlgebras.jl")
 
 @reexport using .Categories
 @reexport using .FinCats
@@ -42,5 +43,7 @@ include("SliceCategories.jl")
 @reexport using .FunctorialDataMigrations
 @reexport using .StructuredCospans
 @reexport using .SliceCategories
+
+@reexport using .CospanAlgebras
 
 end
